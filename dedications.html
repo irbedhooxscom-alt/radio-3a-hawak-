@@ -1,0 +1,113 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>إهداءات راديو ع هواك</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  font-family: Tahoma, Arial, sans-serif;
+}
+
+.dedications {
+  width: 100%;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  color: white;
+  background: linear-gradient(90deg, #071d35, #123c63, #071d35);
+  border-right: 6px solid #00e5ff;
+}
+
+.label {
+  flex-shrink: 0;
+  padding: 12px 18px;
+  background: #087f9c;
+  font-size: 22px;
+  font-weight: bold;
+  z-index: 2;
+}
+
+#message {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 0 20px;
+  font-size: 25px;
+  font-weight: bold;
+}
+
+#message span {
+  display: inline-block;
+  white-space: nowrap;
+  animation: move 40s linear infinite;
+}
+
+@keyframes move {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+</style>
+</head>
+
+<body>
+
+<div class="dedications">
+  <div class="label">💌 إهداءاتكم</div>
+  <div id="message">
+    <span>❤️ راديو ع هواك يستقبل إهداءاتكم وطلباتكم 🎙️</span>
+  </div>
+</div>
+
+<script>
+const messages = [
+
+  "❤️ أهلاً بكل مستمعينا من كل مكان — راديو ع هواك 🎙️",
+
+  "🎵 أرسلوا إهداءاتكم وطلبات أغانيكم وشاركونا أجمل اللحظات",
+
+  "🌹 تحية ومحبة لكل أهل الأردن وفلسطين وسوريا ولبنان",
+
+  "🎙️ راديو ع هواك — صوتكم معنا وأغانيكم تجمعنا ❤️"
+
+];
+
+// لإضافة إهداء جديد، أضف سطراً بين علامتي تنصيص
+// وضع فاصلة بعد كل إهداء ما عدا الأخير
+
+const box = document.getElementById("message");
+let current = 0;
+
+function showMessage() {
+  box.innerHTML = "";
+
+  const span = document.createElement("span");
+  span.textContent = messages[current];
+
+  box.appendChild(span);
+
+  current = (current + 1) % messages.length;
+}
+
+showMessage();
+
+setInterval(showMessage, 40000);
+</script>
+
+</body>
+</html>
