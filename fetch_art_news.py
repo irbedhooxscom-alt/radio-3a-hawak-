@@ -10,20 +10,29 @@ from email.utils import parsedate_to_datetime
 
 FEEDS = [
     {
-        "name": "CNN العربية",
-        "url": "https://arabic.cnn.com/rss/cnnarabic_entertainment.rss",
-        "language": "ar"
+        "name": "Arabsounds",
+        "url": "https://www.arabsounds.net/blog?format=rss",
+        "language": "en"
     },
     {
-        "name": "Variety - Music",
+        "name": "NME Music",
+        "url": "https://www.nme.com/news/music/feed",
+        "language": "en"
+    },
+    {
+        "name": "Variety Music",
         "url": "https://variety.com/v/music/feed/",
         "language": "en"
-    },
-    {
-        "name": "Variety - Film",
-        "url": "https://variety.com/v/film/feed/",
-        "language": "en"
     }
+]
+
+KEYWORDS = [
+    "music", "song", "single", "album", "singer", "artist",
+    "concert", "tour", "festival", "live", "release",
+    "new track", "music video", "performance",
+    "أغنية", "اغنية", "ألبوم", "البوم", "مطرب",
+    "فنان", "مغني", "حفلة", "حفل", "حفلات",
+    "موسيقى", "جولة غنائية", "إصدار", "جديد"
 ]
 
 def get_text(element, tag):
@@ -32,13 +41,17 @@ def get_text(element, tag):
         return ""
     return (node.text or "").strip()
 
+def is_music_news(title, description):
+    text = (title + " " + description).lower()
+    return any(word in text for word in KEYWORDS)
+
 def translate_to_arabic(title, language):
     if language == "ar" or re.search(r"[\u0600-\u06FF]", title):
         return title
 
     params = urllib.parse.urlencode({
         "client": "gtx",
-        "sl": "en",
+        "sl": "auto",
         "tl": "ar",
         "dt": "t",
         "q": title
@@ -62,7 +75,7 @@ def translate_to_arabic(title, language):
         return translated.strip() or title
 
     except Exception as error:
-        print("تعذرت الترجمة:", error)
+        print("Translation error:", error)
         return title
 
 def fetch_feed(feed):
@@ -87,6 +100,9 @@ def fetch_feed(feed):
         pub_date = get_text(item, "pubDate")
 
         if not title or not link:
+            continue
+
+        if not is_music_news(title, description):
             continue
 
         date_iso = ""
@@ -120,13 +136,14 @@ def main():
         try:
             items = fetch_feed(feed)
             all_news.extend(items)
-            print(f"{feed['name']}: {len(items)} أخبار")
+            print(f'{feed["name"]}: {len(items)} music news')
         except Exception as error:
-            message = f"{feed['name']}: {error}"
+            message = f'{feed["name"]}: {error}'
             errors.append(message)
             print("ERROR:", message)
 
     unique = {}
+
     for item in all_news:
         unique[item["link"]] = item
 
@@ -143,10 +160,10 @@ def main():
     with open("art-news.json", "w", encoding="utf-8") as file:
         json.dump(output, file, ensure_ascii=False, indent=2)
 
-    print(f"تم حفظ {len(output['news'])} خبرًا في art-news.json")
+    print(f'تم حفظ {len(output["news"])} خبر موسيقي')
 
     if not news:
-        raise SystemExit("لم يتم جلب أي خبر. راجع رسائل ERROR أعلاه.")
+        raise SystemExit("لم يتم جلب أخبار موسيقية. راجع رسائل ERROR.")
 
 if __name__ == "__main__":
     main()
