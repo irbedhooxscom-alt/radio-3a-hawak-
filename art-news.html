@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>أخبار الفن - راديو ع هواك</title>
+<title>أخبار الفن العربي - راديو ع هواك</title>
 
 <style>
 * {
@@ -56,7 +56,7 @@ html, body {
 #headline span {
   display: inline-block;
   white-space: nowrap;
-  animation: move 25s linear infinite;
+  animation: move 55s linear infinite;
 }
 
 @keyframes move {
@@ -73,10 +73,10 @@ html, body {
 <body>
 
 <div class="news">
-  <div class="label">🎬 أخبار فنية</div>
+  <div class="label">🎵 أخبار الفن العربي</div>
 
   <div id="headline">
-    <span>🎙️ راديو ع هواك — أخبار الفن العربي والعالمي</span>
+    <span>🎙️ راديو ع هواك — أخبار الأغاني والألبومات والحفلات العربية ❤️</span>
   </div>
 </div>
 
@@ -95,17 +95,49 @@ function showMessage(message) {
   headline.appendChild(span);
 }
 
+function cleanTitle(title) {
+  if (!title) return "";
+
+  return title
+    .replace(/\s+/g, " ")
+    .replace(/^[\s\-|–—:]+|[\s\-|–—:]+$/g, "")
+    .trim();
+}
+
+// استبعاد عناوين الأقسام والكلمات العامة
+function isValidNews(item) {
+  const title = cleanTitle(item.title_ar || item.title);
+
+  if (!title || title.length < 18) return false;
+
+  const blockedTitles = [
+    "فيديو",
+    "فيديوهات",
+    "ألبوم",
+    "ألبومات",
+    "أخبار",
+    "الرئيسية",
+    "المزيد",
+    "مشاهدة"
+  ];
+
+  if (blockedTitles.includes(title)) return false;
+
+  return true;
+}
+
 function showNext() {
   if (!newsItems.length) return;
 
   const item = newsItems[current % newsItems.length];
 
-  // عرض الترجمة العربية أولاً
-  const arabicTitle = item.title_ar || item.title || "";
+  const arabicTitle = cleanTitle(
+    item.title_ar || item.title
+  );
 
   showMessage(
-    "🎬 " + arabicTitle +
-    "  |  " + (item.source || "أخبار فنية") +
+    "🎤 " + arabicTitle +
+    "  |  " + (item.source || "أخبار الفن العربي") +
     "  |  راديو ع هواك 🎙️"
   );
 
@@ -113,7 +145,7 @@ function showNext() {
 }
 
 async function updateNews() {
-  showMessage("⏳ جاري تحديث أخبار الفن العربي والعالمي...");
+  showMessage("⏳ جاري تحديث أخبار الفن العربي...");
 
   try {
     const response = await fetch(
@@ -134,8 +166,12 @@ async function updateNews() {
     const unique = new Map();
 
     data.news.forEach(item => {
-      if (item.title) {
-        unique.set(item.link || item.title.trim(), item);
+      if (!isValidNews(item)) return;
+
+      const key = item.link || cleanTitle(item.title_ar || item.title);
+
+      if (!unique.has(key)) {
+        unique.set(key, item);
       }
     });
 
@@ -147,7 +183,7 @@ async function updateNews() {
       showNext();
     } else {
       showMessage(
-        "🎙️ لا توجد أخبار فنية متاحة حاليًا — راديو ع هواك"
+        "🎙️ لا توجد أخبار فنية جديدة حالياً — راديو ع هواك ❤️"
       );
     }
 
@@ -155,7 +191,7 @@ async function updateNews() {
     console.error("Radio news error:", error);
 
     showMessage(
-      "⚠️ تعذر تحديث الأخبار — سنحاول مجددًا — راديو ع هواك"
+      "⚠️ تعذر تحديث الأخبار — سنحاول مجدداً — راديو ع هواك"
     );
   }
 }
@@ -163,10 +199,10 @@ async function updateNews() {
 // تحميل الأخبار عند فتح الصفحة
 updateNews();
 
-// الانتقال إلى خبر جديد كل 25 ثانية
-setInterval(showNext, 25000);
+// الانتقال إلى خبر جديد كل 55 ثانية
+setInterval(showNext, 55000);
 
-// تحديث قائمة الأخبار كل 5 دقائق
+// تحديث الأخبار كل 5 دقائق
 setInterval(updateNews, 5 * 60 * 1000);
 
 </script>
