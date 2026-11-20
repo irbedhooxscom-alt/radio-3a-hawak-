@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  font-family: Tahoma, Arial, sans-serif;
+}
+
+.ticker {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  background: linear-gradient(90deg,#160b35,#32105c,#160b35);
+  border-right: 5px solid #ff1744;
+  padding: 18px 0;
+}
+
+.ticker span {
+  display: inline-block;
+  color: white;
+  font-size: 30px;
+  font-weight: bold;
+  animation: move 22s linear infinite;
+}
+
+@keyframes move {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+</style>
+</head>
+<body>
+<div class="ticker">
+<span>🎙️ أهلاً وسهلاً بكم في راديو ع هواك ❤️ نورتونا من كل مكان… معكم دائماً على الهواء مباشرة 🎶</span>
+</div>
+</body>
+</html>
