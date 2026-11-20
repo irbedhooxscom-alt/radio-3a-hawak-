@@ -5,8 +5,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<title>أخبار الفن - راديو ع هواك</title>
+
 <style>
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 html, body {
   margin: 0;
@@ -23,7 +27,7 @@ html, body {
   height: 100px;
   display: flex;
   align-items: center;
-  background: linear-gradient(90deg,#160b35,#32105c,#160b35);
+  background: linear-gradient(90deg, #160b35, #32105c, #160b35);
   border-right: 6px solid #ff1744;
   color: white;
   overflow: hidden;
@@ -56,8 +60,12 @@ html, body {
 }
 
 @keyframes move {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(100%); }
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
 }
 </style>
 </head>
@@ -66,6 +74,7 @@ html, body {
 
 <div class="news">
   <div class="label">🎬 أخبار فنية</div>
+
   <div id="headline">
     <span>🎙️ راديو ع هواك — أخبار الفن العربي والعالمي</span>
   </div>
@@ -82,6 +91,7 @@ function showMessage(message) {
 
   const span = document.createElement("span");
   span.textContent = message;
+
   headline.appendChild(span);
 }
 
@@ -90,8 +100,11 @@ function showNext() {
 
   const item = newsItems[current % newsItems.length];
 
+  // عرض الترجمة العربية أولاً
+  const arabicTitle = item.title_ar || item.title || "";
+
   showMessage(
-    "🎬 " + item.title +
+    "🎬 " + arabicTitle +
     "  |  " + (item.source || "أخبار فنية") +
     "  |  راديو ع هواك 🎙️"
   );
@@ -122,7 +135,7 @@ async function updateNews() {
 
     data.news.forEach(item => {
       if (item.title) {
-        unique.set(item.title.trim(), item);
+        unique.set(item.link || item.title.trim(), item);
       }
     });
 
@@ -133,7 +146,9 @@ async function updateNews() {
       current = 0;
       showNext();
     } else {
-      showMessage("🎙️ لا توجد أخبار فنية متاحة حاليًا — راديو ع هواك");
+      showMessage(
+        "🎙️ لا توجد أخبار فنية متاحة حاليًا — راديو ع هواك"
+      );
     }
 
   } catch (error) {
@@ -145,10 +160,15 @@ async function updateNews() {
   }
 }
 
+// تحميل الأخبار عند فتح الصفحة
 updateNews();
 
+// الانتقال إلى خبر جديد كل 25 ثانية
 setInterval(showNext, 25000);
+
+// تحديث قائمة الأخبار كل 5 دقائق
 setInterval(updateNews, 5 * 60 * 1000);
+
 </script>
 
 </body>
