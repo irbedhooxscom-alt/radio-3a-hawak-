@@ -1,6 +1,9 @@
 
 import json
+import re
+import time
 import urllib.request
+import urllib.parse
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
@@ -28,6 +31,39 @@ def get_text(element, tag):
     if node is None:
         return ""
     return (node.text or "").strip()
+
+def translate_to_arabic(title, language):
+    if language == "ar" or re.search(r"[\u0600-\u06FF]", title):
+        return title
+
+    params = urllib.parse.urlencode({
+        "client": "gtx",
+        "sl": "en",
+        "tl": "ar",
+        "dt": "t",
+        "q": title
+    })
+
+    url = "https://translate.googleapis.com/translate_a/single?" + params
+
+    request = urllib.request.Request(
+        url,
+        headers={"User-Agent": "Mozilla/5.0"}
+    )
+
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            result = json.loads(response.read().decode("utf-8"))
+
+        translated = "".join(
+            part[0] for part in result[0] if part and part[0]
+        )
+
+        return translated.strip() or title
+
+    except Exception as error:
+        print("تعذرت الترجمة:", error)
+        return title
 
 def fetch_feed(feed):
     request = urllib.request.Request(
@@ -61,8 +97,12 @@ def fetch_feed(feed):
             except Exception:
                 date_iso = pub_date
 
+        title_ar = translate_to_arabic(title, feed["language"])
+        time.sleep(0.3)
+
         items.append({
             "title": title,
+            "title_ar": title_ar,
             "link": link,
             "description": description,
             "source": feed["name"],
