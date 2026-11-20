@@ -4,16 +4,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
+
 html, body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   background: transparent;
   font-family: Tahoma, Arial, sans-serif;
 }
+
 .news {
+  width: 100%;
   height: 100px;
   display: flex;
   align-items: center;
@@ -22,30 +30,45 @@ html, body {
   color: white;
   overflow: hidden;
 }
+
 .label {
   flex-shrink: 0;
   background: #d41445;
   padding: 12px 18px;
   font-size: 23px;
   font-weight: bold;
+  z-index: 2;
 }
+
 #headline {
+  flex: 1;
+  overflow: hidden;
   white-space: nowrap;
-  padding: 0 25px;
   font-size: 27px;
   font-weight: bold;
-  animation: move 20s linear infinite;
+  padding: 0 20px;
 }
+
+#headline span {
+  display: inline-block;
+  white-space: nowrap;
+  animation: move 25s linear infinite;
+}
+
 @keyframes move {
   from { transform: translateX(-100%); }
-  to { transform: translateX(100%); }
+  to   { transform: translateX(100%); }
 }
 </style>
 </head>
+
 <body>
+
 <div class="news">
   <div class="label">🎬 أخبار فنية</div>
-  <div id="headline">🎵 تابعوا أحدث أخبار الفن العربي والعالمي مع راديو ع هواك</div>
+  <div id="headline">
+    <span>🎵 أحدث أخبار الفن العربي والعالمي — راديو ع هواك 🎙️</span>
+  </div>
 </div>
 
 <script>
@@ -64,50 +87,88 @@ const feeds = [
 let newsItems = [];
 let current = 0;
 
-async function loadFeed(url) {
-  const api = "https://api.rss2json.com/v1/api.json?rss_url=" +
-              encodeURIComponent(url);
-  const response = await fetch(api);
-  const data = await response.json();
+function showMessage(message) {
+  headline.innerHTML = "";
 
-  if (data.status === "ok") {
-    return data.items || [];
-  }
-  return [];
+  const span = document.createElement("span");
+  span.textContent = message;
+  headline.appendChild(span);
 }
 
-async function updateNews() {
-  try {
-    const results = await Promise.all(feeds.map(loadFeed));
-    newsItems = results.flat()
-      .filter(item => item.title)
-      .map(item => item.title);
+async function loadFeed(url) {
+  const proxy = "https://proxy.cors.dev/";
+  const response = await fetch(proxy + url);
 
-    if (newsItems.length) {
-      current = 0;
-      showNext();
-    } else {
-      headline.textContent = "🎙️ راديو ع هواك — أخبار الفن العربي والعالمي";
-    }
-  } catch (error) {
-    headline.textContent =
-      "🎙️ راديو ع هواك — أخبار الفن العربي والعالمي";
+  if (!response.ok) {
+    throw new Error("RSS request failed");
   }
+
+  const xmlText = await response.text();
+  const xml = new DOMParser().parseFromString(
+    xmlText,
+    "application/xml"
+  );
+
+  if (xml.querySelector("parsererror")) {
+    throw new Error("Invalid RSS response");
+  }
+
+  return Array.from(xml.querySelectorAll("item"))
+    .map(item => ({
+      title: item.querySelector("title")?.textContent?.trim() || ""
+    }))
+    .filter(item => item.title);
 }
 
 function showNext() {
   if (!newsItems.length) return;
 
-  headline.textContent =
-    "🎬 " + newsItems[current % newsItems.length] +
-    "     |     راديو ع هواك 🎙️";
+  const item = newsItems[current % newsItems.length];
+
+  showMessage("🎬 " + item.title + "   |   راديو ع هواك 🎙️");
 
   current++;
 }
 
+async function updateNews() {
+  showMessage("⏳ جاري تحميل آخر الأخبار الفنية...");
+
+  try {
+    const results = await Promise.all(
+      feeds.map(loadFeed)
+    );
+
+    const allItems = results.flat();
+
+    const unique = new Map();
+
+    allItems.forEach(item => {
+      if (item.title) {
+        unique.set(item.title, item);
+      }
+    });
+
+    newsItems = Array.from(unique.values());
+
+    if (newsItems.length > 0) {
+      current = 0;
+      showNext();
+    } else {
+      showMessage("🎙️ لا توجد أخبار متاحة حاليًا — راديو ع هواك");
+    }
+
+  } catch (error) {
+    console.error("News loading error:", error);
+
+    showMessage("⚠️ تعذر تحميل الأخبار حاليًا — راديو ع هواك");
+  }
+}
+
 updateNews();
+
 setInterval(updateNews, 30 * 60 * 1000);
-setInterval(showNext, 15000);
+setInterval(showNext, 25000);
 </script>
+
 </body>
 </html>
