@@ -1,0 +1,113 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  font-family: Tahoma, Arial, sans-serif;
+}
+.news {
+  height: 100px;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(90deg,#160b35,#32105c,#160b35);
+  border-right: 6px solid #ff1744;
+  color: white;
+  overflow: hidden;
+}
+.label {
+  flex-shrink: 0;
+  background: #d41445;
+  padding: 12px 18px;
+  font-size: 23px;
+  font-weight: bold;
+}
+#headline {
+  white-space: nowrap;
+  padding: 0 25px;
+  font-size: 27px;
+  font-weight: bold;
+  animation: move 20s linear infinite;
+}
+@keyframes move {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+</style>
+</head>
+<body>
+<div class="news">
+  <div class="label">🎬 أخبار فنية</div>
+  <div id="headline">🎵 تابعوا أحدث أخبار الفن العربي والعالمي مع راديو ع هواك</div>
+</div>
+
+<script>
+const headline = document.getElementById("headline");
+
+const feeds = [
+  "https://news.google.com/rss/search?q=" +
+  encodeURIComponent("أخبار الفن والمشاهير والأغاني") +
+  "&hl=ar&gl=SA&ceid=SA:ar",
+
+  "https://news.google.com/rss/search?q=" +
+  encodeURIComponent("music entertainment movies celebrities") +
+  "&hl=en-US&gl=US&ceid=US:en"
+];
+
+let newsItems = [];
+let current = 0;
+
+async function loadFeed(url) {
+  const api = "https://api.rss2json.com/v1/api.json?rss_url=" +
+              encodeURIComponent(url);
+  const response = await fetch(api);
+  const data = await response.json();
+
+  if (data.status === "ok") {
+    return data.items || [];
+  }
+  return [];
+}
+
+async function updateNews() {
+  try {
+    const results = await Promise.all(feeds.map(loadFeed));
+    newsItems = results.flat()
+      .filter(item => item.title)
+      .map(item => item.title);
+
+    if (newsItems.length) {
+      current = 0;
+      showNext();
+    } else {
+      headline.textContent = "🎙️ راديو ع هواك — أخبار الفن العربي والعالمي";
+    }
+  } catch (error) {
+    headline.textContent =
+      "🎙️ راديو ع هواك — أخبار الفن العربي والعالمي";
+  }
+}
+
+function showNext() {
+  if (!newsItems.length) return;
+
+  headline.textContent =
+    "🎬 " + newsItems[current % newsItems.length] +
+    "     |     راديو ع هواك 🎙️";
+
+  current++;
+}
+
+updateNews();
+setInterval(updateNews, 30 * 60 * 1000);
+setInterval(showNext, 15000);
+</script>
+</body>
+</html>
