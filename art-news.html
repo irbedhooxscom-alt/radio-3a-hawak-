@@ -6,9 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 html, body {
   margin: 0;
@@ -42,11 +40,13 @@ html, body {
 
 #headline {
   flex: 1;
+  min-width: 0;
   overflow: hidden;
   white-space: nowrap;
   font-size: 27px;
   font-weight: bold;
   padding: 0 20px;
+  direction: rtl;
 }
 
 #headline span {
@@ -57,7 +57,7 @@ html, body {
 
 @keyframes move {
   from { transform: translateX(-100%); }
-  to   { transform: translateX(100%); }
+  to { transform: translateX(100%); }
 }
 </style>
 </head>
@@ -67,22 +67,12 @@ html, body {
 <div class="news">
   <div class="label">🎬 أخبار فنية</div>
   <div id="headline">
-    <span>🎵 أحدث أخبار الفن العربي والعالمي — راديو ع هواك 🎙️</span>
+    <span>🎙️ راديو ع هواك — أخبار الفن العربي والعالمي</span>
   </div>
 </div>
 
 <script>
 const headline = document.getElementById("headline");
-
-const feeds = [
-  "https://news.google.com/rss/search?q=" +
-  encodeURIComponent("أخبار الفن والمشاهير والأغاني") +
-  "&hl=ar&gl=SA&ceid=SA:ar",
-
-  "https://news.google.com/rss/search?q=" +
-  encodeURIComponent("music entertainment movies celebrities") +
-  "&hl=en-US&gl=US&ceid=US:en"
-];
 
 let newsItems = [];
 let current = 0;
@@ -95,79 +85,70 @@ function showMessage(message) {
   headline.appendChild(span);
 }
 
-async function loadFeed(url) {
-  const proxy = "https://proxy.cors.dev/";
-  const response = await fetch(proxy + url);
-
-  if (!response.ok) {
-    throw new Error("RSS request failed");
-  }
-
-  const xmlText = await response.text();
-  const xml = new DOMParser().parseFromString(
-    xmlText,
-    "application/xml"
-  );
-
-  if (xml.querySelector("parsererror")) {
-    throw new Error("Invalid RSS response");
-  }
-
-  return Array.from(xml.querySelectorAll("item"))
-    .map(item => ({
-      title: item.querySelector("title")?.textContent?.trim() || ""
-    }))
-    .filter(item => item.title);
-}
-
 function showNext() {
   if (!newsItems.length) return;
 
   const item = newsItems[current % newsItems.length];
 
-  showMessage("🎬 " + item.title + "   |   راديو ع هواك 🎙️");
+  showMessage(
+    "🎬 " + item.title +
+    "  |  " + (item.source || "أخبار فنية") +
+    "  |  راديو ع هواك 🎙️"
+  );
 
   current++;
 }
 
 async function updateNews() {
-  showMessage("⏳ جاري تحميل آخر الأخبار الفنية...");
+  showMessage("⏳ جاري تحديث أخبار الفن العربي والعالمي...");
 
   try {
-    const results = await Promise.all(
-      feeds.map(loadFeed)
+    const response = await fetch(
+      "./art-news.json?t=" + Date.now(),
+      { cache: "no-store" }
     );
 
-    const allItems = results.flat();
+    if (!response.ok) {
+      throw new Error("تعذر الوصول إلى ملف الأخبار");
+    }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data.news)) {
+      throw new Error("صيغة ملف الأخبار غير صحيحة");
+    }
 
     const unique = new Map();
 
-    allItems.forEach(item => {
+    data.news.forEach(item => {
       if (item.title) {
-        unique.set(item.title, item);
+        unique.set(item.title.trim(), item);
       }
     });
 
-    newsItems = Array.from(unique.values());
+    newsItems = Array.from(unique.values())
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
 
     if (newsItems.length > 0) {
       current = 0;
       showNext();
     } else {
-      showMessage("🎙️ لا توجد أخبار متاحة حاليًا — راديو ع هواك");
+      showMessage("🎙️ لا توجد أخبار فنية متاحة حاليًا — راديو ع هواك");
     }
 
   } catch (error) {
-    console.error("News loading error:", error);
+    console.error("Radio news error:", error);
 
-    showMessage("⚠️ تعذر تحميل الأخبار حاليًا — راديو ع هواك");
+    showMessage(
+      "⚠️ تعذر تحديث الأخبار — سنحاول مجددًا — راديو ع هواك"
+    );
   }
 }
 
 updateNews();
 
-setInterval(updateNews, 30 * 60 * 1000);
 setInterval(showNext, 25000);
+setInterval(updateNews, 5 * 60 * 1000);
 </script>
 
 </body>
